@@ -4,7 +4,6 @@ import itertools
 import functools
 import operator
 import random
-from statistics import _HashableT
 from typing import (
     Any,
     Callable,
@@ -21,9 +20,10 @@ from typing import (
 )
 from typing_extensions import Self
 
-from .helper_types import _SupportsSumNoDefaultT, _MulT, _AddableT1, _AddableT2
+from .helper_types import SupportsSumNoDefaultT, MulT, AddableT1, AddableT2, HashableT
 
 T = TypeVar("T")
+SI_T = TypeVar("SI_T", covariant=True)
 V = TypeVar("V")
 
 Predicate: TypeAlias = Callable[[T], bool]
@@ -31,17 +31,17 @@ Predicate: TypeAlias = Callable[[T], bool]
 NOFILL = object()
 
 
-class SmartIterator(Generic[T]):
-    def __init__(self, it: Iterable[T]):
-        self._it = iter(it)
+class SI(Generic[SI_T]):
+    def __init__(self, it: Iterable[SI_T]) -> None:
+        self._it: Iterator[SI_T] = iter(it)
 
-    def __iter__(self) -> Iterator[T]:
-        return iter(self._it)
+    def __iter__(self) -> Iterator[SI_T]:
+        return self._it
 
-    def __next__(self) -> T:
+    def __next__(self) -> SI_T:
         return next(self._it)
 
-    def map(self: SI[T], fun: Callable[[T], V]) -> SI[V]:
+    def map(self: SI[SI_T], fun: Callable[[SI_T], V]) -> SI[V]:
         """
         Applies a callable to each element, yielding the results.
         """
@@ -53,31 +53,32 @@ class SmartIterator(Generic[T]):
         """
         return sum(1 for _ in self)
 
-    def flat_map(self: SI[T], fun: Callable[[T], Iterable[V]]) -> SI[V]:
+    def flat_map(self: SI[SI_T], fun: Callable[[SI_T], Iterable[V]]) -> SI[V]:
         """
         Applies a callable to each element that returns an iterable of values for each element, and yields all the values.
         """
         return type(self)(itertools.chain.from_iterable(map(fun, self)))
 
-    def filter(self, pred: Optional[Predicate[T]] = None) -> Self:
+    def filter(self, pred: Optional[Predicate[SI_T]] = None) -> Self:
         """
         Retains only elements for which pred returns True. If pred isn't provided, filters by truthiness.
         """
         return type(self)(filter(pred, self))
 
-    def reduce(self, fun: Callable[[T, T], T]) -> T:
+    def reduce(self, fun: Callable[[SI_T, SI_T], SI_T]) -> SI_T:
         """
         Applies a reduction function to the iterator. Raises TypeError if iterator is empty.
         """
         return functools.reduce(fun, self)
 
     # This method is somewhat of an outlier (no variable default??), but that's required for it to be implemented via the builtin sum
+    # TODO: modify bounds to detect invalid start for this element type? Might be impossible.
     @overload
-    def sum(self: SI[_SupportsSumNoDefaultT]) -> Union[_SupportsSumNoDefaultT, Literal[0]]:
+    def sum(self: SI[SupportsSumNoDefaultT]) -> Union[SupportsSumNoDefaultT, Literal[0]]:
         ...
 
     @overload
-    def sum(self: SI[_AddableT1], start: _AddableT2) -> Union[_AddableT1, _AddableT2]:
+    def sum(self: SI[AddableT1], start: AddableT2) -> Union[AddableT1, AddableT2]:
         ...
 
     def sum(self, start=None):
@@ -89,14 +90,14 @@ class SmartIterator(Generic[T]):
         return sum(self, start)  # type:ignore
 
     @overload
-    def prod(self: SI[_MulT], default: _MulT) -> _MulT:
+    def prod(self: SI[MulT], default: MulT) -> MulT:
         ...
 
     @overload
-    def prod(self: SI[_MulT]) -> Union[_MulT, Literal[1]]:
+    def prod(self: SI[MulT]) -> Union[MulT, Literal[1]]:
         ...
 
-    def prod(self: SI[_MulT], default=1):
+    def prod(self: SI[MulT], default=1):
         """
         Returns the product of elements, or default if there's no elements.
         """
@@ -105,20 +106,20 @@ class SmartIterator(Generic[T]):
         except TypeError:
             return default
 
-    def for_each(self, fun: Callable[[T], Any]) -> None:
+    def for_each(self, fun: Callable[[SI_T], Any]) -> None:
         """
         Applies a function to each element in the iterator, consuming it.
         """
         for el in self:
             fun(el)
 
-    def enumerate(self: SI[T], start: int = 0) -> SI[Tuple[int, T]]:
+    def enumerate(self: SI[SI_T], start: int = 0) -> SI[Tuple[int, SI_T]]:
         """
         See enumerate from the standard library.
         """
         return type(self)(enumerate(self, start=start))
 
-    def to_list(self) -> list[T]:
+    def to_list(self) -> list[SI_T]:
         """
         Collects the iterator into a list.
         """
@@ -130,14 +131,14 @@ class SmartIterator(Generic[T]):
         """
         return fun(self)
 
-    def sliding_window(self: SI[T], k: int, tooshort_ok: bool = True) -> SI[tuple[T, ...]]:
+    def sliding_window(self: SI[SI_T], k: int, tooshort_ok: bool = True) -> SI[tuple[SI_T, ...]]:
         """Returns an SI of k-sized sliding windows.
         If there's not enough elements for one window,
         it'll still be yielded if tooshort_ok, otherwise the iterator will be empty.
         """
         return type(self)(self._sliding_window(k=k, tooshort_ok=tooshort_ok))
 
-    def _sliding_window(self, k: int, tooshort_ok: bool = True) -> Iterator[tuple[T, ...]]:
+    def _sliding_window(self, k: int, tooshort_ok: bool = True) -> Iterator[tuple[SI_T, ...]]:
         if k < 1:
             raise ValueError(f"k must be >=1, was {k}")
         queue = collections.deque(maxlen=k)
@@ -153,7 +154,7 @@ class SmartIterator(Generic[T]):
             queue.append(el)  # which pops the oldest one
             yield tuple(queue)
 
-    def shifted_pairs(self: SI[T], k: int) -> SI[tuple[T, T]]:
+    def shifted_pairs(self: SI[SI_T], k: int) -> SI[tuple[SI_T, SI_T]]:
         """
         Returns an iterator of tuples of elements (self[i],self[i+k]).
         There'll only be len(self)-k+1 such tuples.
@@ -161,7 +162,7 @@ class SmartIterator(Generic[T]):
         lst = self.to_list()
         return type(self)(zip(lst, lst[k:]))
 
-    def groups(self: SI[T], k: int = 2, fillvalue=NOFILL) -> SI[tuple[T, ...]]:
+    def groups(self: SI[SI_T], k: int = 2, fillvalue=NOFILL) -> SI[tuple[SI_T, ...]]:
         """
         ABCD -> AB, CD (for k=2)
         Returns an SI of tuples.
@@ -174,12 +175,13 @@ class SmartIterator(Generic[T]):
         else:
             return type(self)(itertools.zip_longest(*([it] * k), fillvalue=fillvalue))
 
+    # Here, return type is widened to the default's type.
     @overload
-    def find(self, pred: Optional[Predicate[T]], default: T) -> T:
+    def find(self: SI[T], pred: Optional[Predicate[T]], default: T) -> T:
         ...
 
     @overload
-    def find(self, pred: Optional[Predicate[T]], default: None) -> Optional[T]:
+    def find(self, pred: Optional[Predicate[SI_T]], default: None) -> Optional[SI_T]:
         ...
 
     def find(self, pred=None, default=None):
@@ -190,11 +192,11 @@ class SmartIterator(Generic[T]):
         return next(filter(pred, self), default)
 
     @overload
-    def next(self) -> T:
+    def next(self) -> SI_T:
         ...
 
     @overload
-    def next(self, default: V) -> Union[T, V]:
+    def next(self, default: V) -> Union[SI_T, V]:
         ...
 
     def next(self, default=NOFILL):
@@ -207,11 +209,11 @@ class SmartIterator(Generic[T]):
         return next(self._it, default)
 
     @overload
-    def last(self) -> T:
+    def last(self) -> SI_T:
         ...
 
     @overload
-    def last(self, default: V) -> Union[T, V]:
+    def last(self, default: V) -> Union[SI_T, V]:
         ...
 
     def last(self, default=NOFILL):
@@ -244,27 +246,27 @@ class SmartIterator(Generic[T]):
         random.shuffle(lst, random=random_fun)
         return type(self)(lst)
 
-    def any(self, pred: Predicate[T]) -> bool:
+    def any(self, pred: Predicate[SI_T]) -> bool:
         """
         Returns True if there's at least one item for which pred is True.
         Returns False on an empty iterable.
         """
         return any(pred(x) for x in self)
 
-    def all(self, pred: Predicate[T]) -> bool:
+    def all(self, pred: Predicate[SI_T]) -> bool:
         """
         Returns True if there's at no items for which pred is False.
         Returns True on an empty iterable.
         """
         return all(pred(x) for x in self)
 
-    def inspect(self, fun: Callable[[T], Any]) -> Self:
+    def inspect(self, fun: Callable[[SI_T], Any]) -> Self:
         """
         Applies fun to each element of the iterator as it gets yielded, passing the element on unchanged.
         """
         return self.map(lambda x: (fun(x), x)[1])
 
-    def zip(self: SI[T], other: Iterable[V]) -> SI[Tuple[T, V]]:
+    def zip(self: SI[SI_T], other: Iterable[V]) -> SI[Tuple[SI_T, V]]:
         return type(self)(zip(self, other))
 
     def unzip(self: SI[Tuple[T, V]]) -> Tuple[SI[T], SI[V]]:
@@ -316,6 +318,10 @@ class SmartIterator(Generic[T]):
         ...
 
     @overload
+    def tee(self) -> Tuple[Self, Self]:
+        ...
+
+    @overload
     def tee(self, n: Literal[2]) -> Tuple[Self, Self]:
         ...
 
@@ -323,11 +329,15 @@ class SmartIterator(Generic[T]):
     def tee(self, n: Literal[3]) -> Tuple[Self, Self, Self]:
         ...
 
+    @overload
+    def tee(self, n: int = 2) -> Tuple[Self, ...]:
+        ...
+
     def tee(self, n: int = 2) -> Tuple[Self, ...]:
         "Splits the iterator into n independent copies. See itertools.tee."
         return tuple(map(type(self), itertools.tee(self, n)))
 
-    def partition(self, pred: Predicate[T]) -> Tuple[list[T], list[T]]:
+    def partition(self, pred: Predicate[SI_T]) -> Tuple[list[SI_T], list[SI_T]]:
         """Consumes the iterator and returns two lists: all elements for which pred is True, and all elements for which pred is False."""
         true = []
         false = []
@@ -338,7 +348,7 @@ class SmartIterator(Generic[T]):
                 false.append(el)
         return true, false
 
-    def group_by(self, key: Callable[[T], V]) -> dict[V, list[T]]:
+    def group_by(self, key: Callable[[SI_T], V]) -> dict[V, list[SI_T]]:
         """Consumes the iterator and returns a dict mapping a value to all elements such that key(element) == value."""
         groups = {}
         for el in self:
@@ -352,13 +362,13 @@ class SmartIterator(Generic[T]):
         """
         return type(self)(itertools.cycle(self))
 
-    def unique(self: SI[_HashableT]) -> SI[_HashableT]:
+    def unique(self: SI[HashableT]) -> SI[HashableT]:
         """
         Retains only the first appearance of each unique (by equality) element. Requires the elements to be hashable.
         """
         seen = set()
 
-        def allow(el: _HashableT) -> bool:
+        def allow(el: HashableT) -> bool:
             if el in seen:
                 return False
             seen.add(el)
@@ -366,12 +376,9 @@ class SmartIterator(Generic[T]):
 
         return self.filter(allow)
 
-    def value_counts(self: SI[_HashableT]) -> collections.Counter[_HashableT]:
+    def value_counts(self: SI[HashableT]) -> collections.Counter[HashableT]:
         """
         Feeds the iterator into collections.Counter, returning a Counter mapping unique elements to their number of occurences.
         Requires the elements to be hashable.
         """
         return self.feed(collections.Counter)
-
-
-SI: TypeAlias = "SmartIterator[T]"
