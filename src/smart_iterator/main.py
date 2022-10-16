@@ -4,6 +4,7 @@ import itertools
 import functools
 import operator
 import random
+from statistics import _HashableT
 from typing import (
     Any,
     Callable,
@@ -342,6 +343,27 @@ class SmartIterator(Generic[T]):
         Repeats an iterator endlessly. See itertools.cycle.
         """
         return type(self)(itertools.cycle(self))
+
+    def unique(self: SI[_HashableT]) -> SI[_HashableT]:
+        """
+        Retains only the first appearance of each unique (by equality) element. Requires the elements to be hashable.
+        """
+        seen = set()
+
+        def allow(el: _HashableT) -> bool:
+            if el in seen:
+                return False
+            seen.add(el)
+            return True
+
+        return self.filter(allow)
+
+    def value_counts(self: SI[_HashableT]) -> collections.Counter[_HashableT]:
+        """
+        Feeds the iterator into collections.Counter, returning a Counter mapping unique elements to their number of occurences.
+        Requires the elements to be hashable.
+        """
+        return self.feed(collections.Counter)
 
 
 SI: TypeAlias = "SmartIterator[T]"

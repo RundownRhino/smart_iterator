@@ -1,4 +1,5 @@
 from typing import TypeVar, Protocol, Any
+from typing_extensions import Self
 
 _T_co = TypeVar("_T_co", covariant=True)
 _T_contra = TypeVar("_T_contra", contravariant=True)
@@ -24,6 +25,16 @@ class SupportsRMul(Protocol[_T_contra, _T_co]):
         ...
 
 
+class PartialEq(Protocol):
+    def __eq__(self, other: Self) -> bool:
+        ...
+
+
+class Hashable(PartialEq, Protocol):
+    def __hash__(self) -> int:
+        ...
+
+
 class _SupportsSumWithNoDefaultGiven(SupportsAdd[Any, Any], SupportsRAdd[int, Any], Protocol):
     ...
 
@@ -33,3 +44,5 @@ _MulT = TypeVar("_MulT", bound=SupportsMul)
 
 _AddableT1 = TypeVar("_AddableT1", bound=SupportsAdd[Any, Any])
 _AddableT2 = TypeVar("_AddableT2", bound=SupportsAdd[Any, Any])
+
+_HashableT = TypeVar("_HashableT", bound=Hashable)
