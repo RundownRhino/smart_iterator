@@ -4,7 +4,6 @@ import itertools
 import functools
 import operator
 import random
-from statistics import _HashableT
 from typing import (
     Any,
     Callable,
@@ -21,7 +20,7 @@ from typing import (
 )
 from typing_extensions import Self
 
-from .helper_types import _SupportsSumNoDefaultT, _MulT, _AddableT1, _AddableT2
+from .helper_types import _SupportsSumNoDefaultT, _MulT, _AddableT1, _AddableT2, _HashableT
 
 T = TypeVar("T")
 V = TypeVar("V")
