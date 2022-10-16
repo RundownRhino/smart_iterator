@@ -1,0 +1,4 @@
+**/__pycache__
+/launchprogram.py
+/dist
+*.egg-info/
