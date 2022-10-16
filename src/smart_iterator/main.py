@@ -328,7 +328,7 @@ class SmartIterator(Generic[T]):
         return tuple(map(type(self), itertools.tee(self, n)))
 
     def partition(self, pred: Predicate[T]) -> Tuple[list[T], list[T]]:
-        """Returns two lists: all elements for which pred is True, and all elements for which pred is False."""
+        """Consumes the iterator and returns two lists: all elements for which pred is True, and all elements for which pred is False."""
         true = []
         false = []
         for el in self:
@@ -337,6 +337,14 @@ class SmartIterator(Generic[T]):
             else:
                 false.append(el)
         return true, false
+
+    def group_by(self, key: Callable[[T], V]) -> dict[V, list[T]]:
+        """Consumes the iterator and returns a dict mapping a value to all elements such that key(element) == value."""
+        groups = {}
+        for el in self:
+            val = key(el)
+            groups.setdefault(val, []).append(el)
+        return groups
 
     def cycle(self) -> Self:
         """
