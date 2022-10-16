@@ -1,4 +1,4 @@
-from .main import SmartIterator
+from .main import SI
 
-SI = SmartIterator
-__all__ = ["SmartIterator", "SI"]
+SmartIterator = SI
+__all__ = ["SI", "SmartIterator"]

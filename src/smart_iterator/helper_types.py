@@ -10,6 +10,11 @@ class SupportsAdd(Protocol[_T_contra, _T_co]):
         ...
 
 
+class AddableSelf(Protocol):
+    def __add__(self, other: Self) -> Self:
+        ...
+
+
 class SupportsRAdd(Protocol[_T_contra, _T_co]):
     def __radd__(self, __x: _T_contra) -> _T_co:
         ...
@@ -39,10 +44,11 @@ class _SupportsSumWithNoDefaultGiven(SupportsAdd[Any, Any], SupportsRAdd[int, An
     ...
 
 
-_SupportsSumNoDefaultT = TypeVar("_SupportsSumNoDefaultT", bound=_SupportsSumWithNoDefaultGiven)
-_MulT = TypeVar("_MulT", bound=SupportsMul)
+SupportsSumNoDefaultT = TypeVar("SupportsSumNoDefaultT", bound=_SupportsSumWithNoDefaultGiven)
+# SumDefaultT = TypeVar("SumDefaultT", bound = SupportsAdd[SupportsSumWithDefaultT,SupportsSumWithDefaultT])
+MulT = TypeVar("MulT", bound=SupportsMul)
 
-_AddableT1 = TypeVar("_AddableT1", bound=SupportsAdd[Any, Any])
-_AddableT2 = TypeVar("_AddableT2", bound=SupportsAdd[Any, Any])
+AddableT1 = TypeVar("AddableT1", bound=SupportsAdd[Any, Any])
+AddableT2 = TypeVar("AddableT2", bound=SupportsAdd[Any, Any])
 
-_HashableT = TypeVar("_HashableT", bound=Hashable)
+HashableT = TypeVar("HashableT", bound=Hashable)
