@@ -3,3 +3,9 @@ An iterator wrapper that allows chaining methods FLUENT-style rather than nestin
 
 ### Current state
 First public draft: no real testing done, and only a fraction of the intended methods implemented.
+
+### Installation
+Not on PyPI yet, so
+```
+pip install git+https://github.com/RundownRhino/smart_iterator
+```
