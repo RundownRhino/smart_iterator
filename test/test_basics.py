@@ -22,7 +22,7 @@ class MyStart:
     pow: int
 
     def __add__(self, other: MyElem) -> MyElem:
-        return MyElem(self.pow**other.val)
+        return MyElem(self.pow ** other.val)
 
 
 def test_sum_ok():
