@@ -6,9 +6,6 @@ import operator
 import random
 from typing import (
     Any,
-    Callable,
-    Iterable,
-    Iterator,
     Literal,
     Optional,
     Tuple,
@@ -18,6 +15,7 @@ from typing import (
     Union,
     overload,
 )
+from collections.abc import Callable, Iterable, Iterator
 from typing_extensions import Self
 
 from .helper_types import SupportsSumNoDefaultT, MulT, AddableT1, AddableT2, HashableT
