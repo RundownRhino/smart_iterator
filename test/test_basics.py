@@ -14,7 +14,7 @@ class MyElem:
     val: int
 
     def __add__(self, other: Self) -> Self:
-        return type(self)(self.val + other.val)
+        return MyElem(self.val + other.val)
 
 
 @dataclass
