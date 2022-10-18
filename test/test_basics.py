@@ -14,7 +14,7 @@ class MyElem:
     val: int
 
     def __add__(self, other: Self) -> Self:
-        return type(self)(self.val + other.val)
+        return MyElem(self.val + other.val)
 
 
 @dataclass
@@ -22,7 +22,7 @@ class MyStart:
     pow: int
 
     def __add__(self, other: MyElem) -> MyElem:
-        return MyElem(self.pow**other.val)
+        return MyElem(self.pow ** other.val)
 
 
 def test_sum_ok():
