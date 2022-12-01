@@ -110,6 +110,32 @@ class SI(Generic[SI_T]):
             return min(self, default=None)  # type:ignore
         return min(self, key=key, default=None)
 
+    @overload
+    def max_(self: SI[SupportsRichComparisonT]) -> SupportsRichComparisonT:
+        ...
+
+    @overload
+    def max_(self: SI[SI_T], key: Callable[[SI_T], SupportsRichComparison]) -> SI_T:
+        ...
+
+    def max_(self, key=None):
+        if key is None:
+            return max(self)  # type:ignore
+        return max(self, key=key)
+
+    @overload
+    def min_(self: SI[SupportsRichComparisonT]) -> SupportsRichComparisonT:
+        ...
+
+    @overload
+    def min_(self: SI[SI_T], key: Callable[[SI_T], SupportsRichComparison]) -> SI_T:
+        ...
+
+    def min_(self, key=None):
+        if key is None:
+            return min(self)  # type:ignore
+        return min(self, key=key)
+
     # This method is somewhat of an outlier (no variable default??), but that's required for it to be implemented via the builtin sum
     # TODO: modify bounds to detect invalid start for this element type? Might be impossible.
     @overload
