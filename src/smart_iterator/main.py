@@ -118,9 +118,9 @@ class SI(Generic[SI_T]):
     def max_(self: SI[SI_T], key: Callable[[SI_T], SupportsRichComparison]) -> SI_T:
         ...
 
-    def max_(self, key=None):
+    def max_(self: SI, key=None):
         if key is None:
-            return max(self)  # type:ignore
+            return max(self)
         return max(self, key=key)
 
     @overload
@@ -131,9 +131,9 @@ class SI(Generic[SI_T]):
     def min_(self: SI[SI_T], key: Callable[[SI_T], SupportsRichComparison]) -> SI_T:
         ...
 
-    def min_(self, key=None):
+    def min_(self: SI, key=None):
         if key is None:
-            return min(self)  # type:ignore
+            return min(self)
         return min(self, key=key)
 
     # This method is somewhat of an outlier (no variable default??), but that's required for it to be implemented via the builtin sum
@@ -467,3 +467,16 @@ class SI(Generic[SI_T]):
         [1,2,3] -> [1,3,6]
         """
         return type(self)(itertools.accumulate(self))
+
+    @overload
+    def sorted(self: SI[SupportsRichComparisonT]) -> SI[SupportsRichComparisonT]:
+        ...
+
+    @overload
+    def sorted(self: SI[SI_T], key: Callable[[SI_T], SupportsRichComparison]) -> SI[SI_T]:
+        ...
+
+    def sorted(self: SI, key=None):
+        if key is None:
+            return type(self)(sorted(self))
+        return type(self)(sorted(self, key=key))
