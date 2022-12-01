@@ -31,13 +31,11 @@ class SupportsRMul(Protocol[_T_contra, _T_co]):
 
 
 class PartialEq(Protocol):
-    def __eq__(self, other: Self) -> bool:
+    def __eq__(self, other: object) -> bool:
         ...
 
 
-class Hashable(PartialEq, Protocol):
-    def __hash__(self) -> int:
-        ...
+from typing import Hashable
 
 
 class _SupportsSumWithNoDefaultGiven(SupportsAdd[Any, Any], SupportsRAdd[int, Any], Protocol):
