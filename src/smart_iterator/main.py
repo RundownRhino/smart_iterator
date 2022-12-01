@@ -97,6 +97,20 @@ class SI(Generic[SI_T]):
             return sum(self)  # type:ignore
         return sum(self, start)  # type:ignore
 
+    def nlargest(self: SI[SupportsRichComparisonT], n: int) -> SI[SupportsRichComparisonT]:
+        """
+        Retains only the n largest elements from self, yields them in ascending order
+        """
+        lst = sorted(self)
+        return type(self)(lst[-n:])
+
+    def nlowest(self: SI[SupportsRichComparisonT], n: int) -> SI[SupportsRichComparisonT]:
+        """
+        Retains only the n smallest elements from self, yields them in ascending order
+        """
+        lst = sorted(self)
+        return type(self)(lst[:n])
+
     @overload
     def prod(self: SI[MulT], default: MulT) -> MulT:
         ...
