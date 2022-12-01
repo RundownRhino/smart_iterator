@@ -1,6 +1,8 @@
-from typing_extensions import Self
 from dataclasses import dataclass
+
 import pytest
+from typing_extensions import Self
+
 from smart_iterator import SI
 
 

@@ -1,12 +1,14 @@
 from __future__ import annotations
+
 import collections
-import itertools
 import functools
+import itertools
 import operator
 import random
 from typing import (
     Any,
     Callable,
+    Generic,
     Iterable,
     Iterator,
     Literal,
@@ -14,13 +16,13 @@ from typing import (
     Tuple,
     TypeAlias,
     TypeVar,
-    Generic,
     Union,
     overload,
 )
+
 from typing_extensions import Self
 
-from .helper_types import SupportsSumNoDefaultT, MulT, AddableT1, AddableT2, HashableT
+from .helper_types import AddableT1, AddableT2, HashableT, MulT, SupportsRichComparisonT, SupportsSumNoDefaultT
 
 T = TypeVar("T")
 SI_T = TypeVar("SI_T", covariant=True)
