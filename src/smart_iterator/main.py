@@ -322,7 +322,11 @@ class SI(Generic[SI_T]):
         If provided, random_fun is used as the randomness source for random.shuffle.
         """
         lst = self.to_list()
-        random.shuffle(lst, random=random_fun)
+        if random_fun is not None:
+            rng = random.Random(random_fun)
+            rng.shuffle(lst)
+        else:
+            random.shuffle(lst)
         return type(self)(lst)
 
     def any(self, pred: Predicate[SI_T]) -> bool:
