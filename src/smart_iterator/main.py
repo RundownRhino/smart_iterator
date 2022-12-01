@@ -22,7 +22,15 @@ from typing import (
 
 from typing_extensions import Self
 
-from .helper_types import AddableT1, AddableT2, HashableT, MulT, SupportsRichComparisonT, SupportsSumNoDefaultT
+from .helper_types import (
+    AddableT1,
+    AddableT2,
+    HashableT,
+    MulT,
+    SupportsRichComparison,
+    SupportsRichComparisonT,
+    SupportsSumNoDefaultT,
+)
 
 T = TypeVar("T")
 SI_T = TypeVar("SI_T", covariant=True)
@@ -76,11 +84,31 @@ class SI(Generic[SI_T]):
         """
         return functools.reduce(fun, self)
 
+    @overload
     def max(self: SI[SupportsRichComparisonT]) -> SupportsRichComparisonT | None:
-        return max(self, default=None)
+        ...
 
+    @overload
+    def max(self: SI[SI_T], key: Callable[[SI_T], SupportsRichComparison]) -> SI_T | None:
+        ...
+
+    def max(self, key=None):  # type:ignore
+        if key is None:
+            return max(self, default=None)  # type:ignore
+        return max(self, key=key, default=None)
+
+    @overload
     def min(self: SI[SupportsRichComparisonT]) -> SupportsRichComparisonT | None:
-        return min(self, default=None)
+        ...
+
+    @overload
+    def min(self: SI[SI_T], key: Callable[[SI_T], SupportsRichComparison]) -> SI_T | None:
+        ...
+
+    def min(self, key=None):  # type:ignore
+        if key is None:
+            return min(self, default=None)  # type:ignore
+        return min(self, key=key, default=None)
 
     # This method is somewhat of an outlier (no variable default??), but that's required for it to be implemented via the builtin sum
     # TODO: modify bounds to detect invalid start for this element type? Might be impossible.
