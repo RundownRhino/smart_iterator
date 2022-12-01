@@ -71,6 +71,12 @@ class SI(Generic[SI_T]):
         """
         return functools.reduce(fun, self)
 
+    def max(self: SI[SupportsRichComparisonT]) -> SupportsRichComparisonT | None:
+        return max(self, default=None)
+
+    def min(self: SI[SupportsRichComparisonT]) -> SupportsRichComparisonT | None:
+        return min(self, default=None)
+
     # This method is somewhat of an outlier (no variable default??), but that's required for it to be implemented via the builtin sum
     # TODO: modify bounds to detect invalid start for this element type? Might be impossible.
     @overload
