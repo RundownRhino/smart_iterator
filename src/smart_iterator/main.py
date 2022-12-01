@@ -61,6 +61,9 @@ class SI(Generic[SI_T]):
         """
         return type(self)(itertools.chain.from_iterable(map(fun, self)))
 
+    def flatten(self: SI[Iterable[SI_T]]) -> SI[SI_T]:
+        return type(self)(itertools.chain.from_iterable(self))  # type:ignore # not sure why it's not typechecking
+
     def filter(self, pred: Optional[Predicate[SI_T]] = None) -> Self:
         """
         Retains only elements for which pred returns True. If pred isn't provided, filters by truthiness.
