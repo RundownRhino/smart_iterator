@@ -382,3 +382,9 @@ class SI(Generic[SI_T]):
         Requires the elements to be hashable.
         """
         return self.feed(collections.Counter)
+
+    def cumsums(self: SI[SupportsSumNoDefaultT]) -> SI[SupportsSumNoDefaultT]:
+        """
+        [1,2,3] -> [1,3,6]
+        """
+        return type(self)(itertools.accumulate(self))
