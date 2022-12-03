@@ -57,6 +57,13 @@ class SI(Generic[SI_T]):
         """
         return type(self)(map(fun, self))
 
+    # TODO: type for fun?
+    def starmap(self: SI[Iterable[T]], fun: Callable[..., V]) -> SI[V]:
+        """
+        Like map, but unpacks each item into arguments for the function.
+        """
+        return type(self)(itertools.starmap(fun, self))  # type:ignore
+
     def count(self) -> int:
         """
         Consumes the iterator, returning the number of elements.
