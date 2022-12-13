@@ -491,3 +491,28 @@ class SI(Generic[SI_T]):
         if key is None:
             return type(self)(sorted(self))
         return type(self)(sorted(self, key=key))
+
+    def position(self: SI[SI_T], pred: Optional[Predicate[SI_T]] = None, start: int = 0) -> int | None:
+        """
+        Returns the position of the first element matching the predicate, if any.
+        """
+        pred_: Predicate[SI_T] = bool if pred is None else pred
+        fun: Predicate[tuple[int, SI_T]] = lambda tup: pred_(tup[1])
+        res: tuple[int, SI_T] | None = self.enumerate(start=start).find(fun)  # type:ignore #??
+        if res is None:
+            return None
+        return res[0]
+
+    def position_(self: SI[SI_T], pred: Optional[Predicate[SI_T]], start: int = 0) -> int:
+        """
+        Returns the position of the first element matching the predicate, or raises ValueError.
+        """
+        res = self.position(pred, start=start)
+        if res is None:
+            raise ValueError
+        return res
+
+    def positions(self: SI[SI_T], pred: Optional[Predicate[SI_T]] = None, start: int = 0) -> SI[int]:
+        pred_: Predicate[SI_T] = bool if pred is None else pred
+        fun: Predicate[tuple[int, SI_T]] = lambda tup: pred_(tup[1])
+        return self.enumerate(start=start).filter(fun).starmap(lambda i, _: i)
