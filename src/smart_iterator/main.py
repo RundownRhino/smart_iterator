@@ -261,13 +261,13 @@ class SI(Generic[SI_T]):
         else:
             return type(self)(itertools.zip_longest(*([it] * k), fillvalue=fillvalue))
 
+    @overload
+    def find(self, pred: Optional[Predicate[SI_T]], default: None) -> Optional[SI_T]:
+        ...
+
     # Here, return type is widened to the default's type.
     @overload
     def find(self: SI[T], pred: Optional[Predicate[T]], default: T) -> T:
-        ...
-
-    @overload
-    def find(self, pred: Optional[Predicate[SI_T]], default: None) -> Optional[SI_T]:
         ...
 
     def find(self, pred=None, default=None):
